@@ -43,6 +43,9 @@ public class StudentServlet extends HttpServlet {
                 case "/delete":
                     deleteStudent(req,resp);
                     break;
+            case "/add":
+                addStudent(req,resp);
+                break;
         }
     }
     private void showListUserPage(HttpServletRequest req, HttpServletResponse resp)
@@ -52,7 +55,7 @@ public class StudentServlet extends HttpServlet {
             PreparedStatement ps = conn.prepareStatement(sql);
 
             ResultSet rs = ps.executeQuery();
-            List<Student> List = new ArrayList<>();
+            List<Student> list = new ArrayList<>();
 
             while (rs.next()) {
                 int id = rs.getInt("StudentId");
@@ -61,10 +64,10 @@ public class StudentServlet extends HttpServlet {
                 String phone = rs.getString("Phone");
 
                 Student student = new Student(id, name, address, phone);
-                List.add(student);
+                list.add(student);
             }
 
-            req.setAttribute("list", List);
+            req.setAttribute("list", list);
             RequestDispatcher rd = req.getRequestDispatcher("/View/students/list.jsp");
             rd.forward(req,resp);
         }catch (SQLException | IOException e ) {
@@ -85,5 +88,27 @@ public class StudentServlet extends HttpServlet {
             throw new RuntimeException(e);
         }
 
+    }
+    private  void addStudent(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        String sql = "insert into student values(null,?,?,?)";
+        String name = req.getParameter("StudentName");
+        String address = req.getParameter("Address");
+        String phone = req.getParameter("Phone");
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
+            ps.setString(1,name);
+            ps.setString(2,address);
+            ps.setString(3,phone);
+
+            ps.executeUpdate();
+
+            resp.sendRedirect("/student");
+
+        }catch (SQLException e){
+            e.printStackTrace();
+            req.setAttribute("error", "Lỗi khi thêm sinh viên: " + e.getMessage());
+            req.getRequestDispatcher("error.jsp").forward(req, resp);
+        }
     }
 }
